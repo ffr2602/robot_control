@@ -22,7 +22,7 @@ from robot_control.can_setup import CAN_setting
 
 class controller(Node):
     def __init__(self):
-        super().__init__('controller_omni')
+        super().__init__('omni_controller')
         self.get_logger().info('start node')
 
         chassis_length  = 1.004

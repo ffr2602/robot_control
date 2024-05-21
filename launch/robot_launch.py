@@ -23,7 +23,7 @@ def generate_launch_description():
     controller = Node(
         package=package_name,
         executable='omni_controller.py',
-        name='controller',
+        name='omni_controller',
         parameters=[control_params]
     )
 
@@ -38,6 +38,7 @@ def generate_launch_description():
     twist_mux = Node(
         package="twist_mux",
         executable="twist_mux",
+        name='twist_mux',
         parameters=[twist_mux_params],
         remappings=[('/cmd_vel_out','/omni_cont/cmd_vel_unstamped')]
     )

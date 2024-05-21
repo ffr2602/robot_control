@@ -1,4 +1,4 @@
-controller_omni:
+omni_controller:
   ros__parameters:
     mode_orientation: odometry
 
