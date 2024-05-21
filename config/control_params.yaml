@@ -1,0 +1,13 @@
+controller_omni:
+  ros__parameters:
+    mode_orientation: odometry
+
+path_tracking:
+  ros__parameters:
+    orientation: fixed
+
+  # orientation mode:
+  # fixed
+  # follow_line
+  # setpoint
+  # follow_line_&_setpoint
