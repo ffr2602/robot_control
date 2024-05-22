@@ -3,6 +3,7 @@
 import rclpy
 import math
 import numpy as np
+import rclpy.parameter
 import tf_transformations
 
 from geometry_msgs.msg import PoseStamped, Twist, TransformStamped, Pose, Quaternion, Point
@@ -11,7 +12,7 @@ from rclpy.qos import qos_profile_system_default
 from rclpy.node import Node
 from visualization_msgs.msg import Marker
 
-from robot_control.pid import Pid
+from robot_simulation.pid import Pid
 
 
 class node_maker(Node):
@@ -33,7 +34,7 @@ class node_maker(Node):
         super().__init__('path_tracking')
         self.get_logger().info('start node')
 
-        self.declare_parameter('orientation', value='follow_line_&_setpoint')
+        self.declare_parameter('orientation', value='fixed')
 
         self.create_subscription(PoseStamped, '/goal_pose', self.onClick_points, qos_profile=qos_profile_system_default)
         self.create_subscription(Odometry, '/odom', self.onOdom_data, qos_profile=qos_profile_system_default)
@@ -41,6 +42,7 @@ class node_maker(Node):
         self.plan__publisher = self.create_publisher(Path, '/plan', qos_profile=qos_profile_system_default)
         self.twist_publisher = self.create_publisher(Twist, '/cmd_vel', qos_profile=qos_profile_system_default)
         self.mark__publisher = self.create_publisher(Marker, '/marker', qos_profile=qos_profile_system_default)
+        self.odref_publisher = self.create_publisher(Odometry, '/odom_ref', qos_profile=qos_profile_system_default)
 
         self.marker_setting()
 
@@ -73,6 +75,16 @@ class node_maker(Node):
 
     def is_zero(self, matrix, tol):
         return np.allclose(matrix, 0, atol=tol)
+    
+    def odom_ref(self, position: Pose):
+        odometry_refrence = Odometry()
+        odometry_refrence.header.stamp = self.get_clock().now().to_msg()
+        odometry_refrence.header.frame_id = "odom"
+        odometry_refrence.child_frame_id = "base_footprint"
+        odometry_refrence.pose.pose.position.x = position.position.x
+        odometry_refrence.pose.pose.position.y = position.position.y
+        odometry_refrence.pose.pose.orientation = position.orientation
+        self.odref_publisher.publish(odometry_refrence)
 
     def onOdom_data(self, msg: Odometry):
         current_matrix = self.transform_to_matrix(self.pose_to_transform(msg.pose.pose))        
@@ -144,6 +156,7 @@ class node_maker(Node):
 
             if self.count < self.plan_d.__len__() and abs(x_err[3]) < 0.015 and abs(x_err[4]) < 0.015 and abs(x_err[2]) < 0.015:
                 self.reference_matrix = self.transform_to_matrix(self.pose_to_transform(self.plan_d[self.count].pose))
+                self.odom_ref(self.plan_d[self.count].pose)
                 self.count += 1
                 self.finish = False
 
