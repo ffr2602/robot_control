@@ -4,7 +4,7 @@ class Pid:
     d_err = 0
     last_err = 0
     windup = 0.2
-    limit = 0.6
+    limit = 2.0
 
     def __init__(self, kp=0, ki=0, kd=0) -> None:
         self.kp = kp
@@ -18,10 +18,11 @@ class Pid:
         self.last_err = error
         self.i_err = self.i_err + error
         result_pid = (self.kp * error) + (self.ki * self.i_err) + (self.kd * self.d_err)
-        if result_pid >= 0:
-            return self.limit if result_pid > self.limit else result_pid
-        else:
-            return -self.limit if result_pid < -self.limit else result_pid
+        return result_pid
+        # if result_pid >= 0:
+        #     return self.limit if result_pid > self.limit else result_pid
+        # else:
+        #     return -self.limit if result_pid < -self.limit else result_pid
 
     def reset_err(self):
         self.i_err = 0
