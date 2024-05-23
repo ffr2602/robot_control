@@ -62,12 +62,14 @@ private:
   {
     traj.poses.insert(traj.poses.end(), msg.poses.begin(), msg.poses.end());
     received_path = true;
+    robot_main = true;
   }
 
   void timerCallback()
   {
 
-    if (received_path && counter < traj.poses.size() - 1)
+    if(robot_main){
+      if (received_path && counter < traj.poses.size() - 1)
     {
       // current configuration
       auto current_config = tf2::Transform();
@@ -299,8 +301,10 @@ private:
     else
     {
       received_path = false;
+      robot_main = false;
       auto cmd_vel = geometry_msgs::msg::Twist();
       pub_cmd_vel_->publish(cmd_vel);
+    }
     }
   }
 
@@ -318,6 +322,7 @@ private:
   nav_msgs::msg::Path traj;
   arma::vec int_x_err = arma::vec(6, arma::fill::zeros);
   bool received_path = false;
+  bool robot_main = false;
   rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr sub_path_;
 };
 

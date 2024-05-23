@@ -41,7 +41,7 @@ class controller(Node):
         self.declare_parameter('mode_orientation', value='odometry')
         
         self.create_subscription(Imu, '/imu', self.imu_feedback, qos_profile=qos_profile_sensor_data)
-        self.create_subscription(Twist, '/omni_cont/cmd_vel_unstamped', self.apply_velocity, qos_profile=qos_profile_system_default)
+        self.create_subscription(Twist, '/cmd_vel', self.apply_velocity, qos_profile=qos_profile_system_default)
         self.joints_publisher = self.create_publisher(JointState, '/joint_states', qos_profile=qos_profile_sensor_data)
         self.odom_publisher   = self.create_publisher(Odometry, '/odom', qos_profile=qos_profile_services_default)
         self.odom_broadcaster = TransformBroadcaster(self, qos_profile_services_default)
