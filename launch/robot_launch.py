@@ -29,8 +29,15 @@ def generate_launch_description():
 
     path_tracking = Node(
         package=package_name,
-        executable='path_tracking.py',
+        executable='trajectory_tracking',
         name='path_tracking',
+        parameters=[control_params]
+    )
+
+    node_path_generate = Node(
+        package=package_name,
+        executable='path_tracking.py',
+        name='node_path_generate',
         parameters=[control_params]
     )
 
@@ -53,6 +60,7 @@ def generate_launch_description():
         imu_sensor,
         twist_mux,
         path_tracking,
+        node_path_generate,
         rosbridge
     ])
 

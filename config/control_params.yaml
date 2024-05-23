@@ -4,7 +4,13 @@ omni_controller:
 
 path_tracking:
   ros__parameters:
-    orientation: fixed
+    rate: 50.0
+    kp: 2.0
+    ki: 1.0
+
+node_path_generate:
+  ros__parameters:
+    orientation: follow_line
 
   # orientation mode:
   # fixed
