@@ -51,7 +51,7 @@ def generate_launch_description():
         rsp,
         controller,
         imu_sensor,
-        # twist_mux,
+        twist_mux,
         path_tracking,
         rosbridge
     ])
