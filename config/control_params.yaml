@@ -4,7 +4,7 @@ omni_controller:
 
 path_tracking:
   ros__parameters:
-    orientation: follow_line
+    orientation: fixed
     step: 500
 
     pid_x-Kp: 20.0
