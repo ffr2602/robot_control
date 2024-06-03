@@ -7,6 +7,7 @@ import rclpy.parameter
 import tf_transformations
 
 from geometry_msgs.msg import PoseStamped, Twist, TransformStamped, Pose, Quaternion, Point
+from std_msgs.msg import String
 from nav_msgs.msg import Odometry, Path
 from rclpy.qos import qos_profile_system_default
 from rclpy.node import Node
@@ -18,12 +19,11 @@ from robot_control.pid import PID
 class node_maker(Node):
 
     plan_d = [PoseStamped()]
-    twists = Twist()
 
     count = 0
 
     last_position = np.zeros(2)
-    toleransi = 0.005
+    toleransi = 0.01
 
     finish = True
     plan_n = False
@@ -33,7 +33,7 @@ class node_maker(Node):
         self.get_logger().info('start node')
 
         self.declare_parameter('orientation', value='follow_line')
-        self.declare_parameter('step', value=500)
+        self.declare_parameter('step', value=50)
 
         self.declare_parameter('pid_x-Kp', value=20.0)
         self.declare_parameter('pid_x-Ki', value=0.0)
@@ -58,6 +58,7 @@ class node_maker(Node):
         self.twist_publisher = self.create_publisher(Twist, '/cmd_vel', qos_profile=qos_profile_system_default)
         self.mark__publisher = self.create_publisher(Marker, '/marker', qos_profile=qos_profile_system_default)
         self.odref_publisher = self.create_publisher(Odometry, '/odom_ref', qos_profile=qos_profile_system_default)
+        self.cnftn_publisher = self.create_publisher(String, '/robot_kondisi', qos_profile=qos_profile_system_default)
 
         self.marker_setting()
 
@@ -71,6 +72,11 @@ class node_maker(Node):
     def onPlan(self, msg: Path):
         self.plan_d += msg.poses
         self.finish = False
+    
+    def onKondisi(self, data_kondisi):
+        data_send = String()
+        data_send.data = data_kondisi
+        self.cnftn_publisher.publish(data_send)
 
     def pose_to_transform(self, msg: Pose):
         transform = TransformStamped()
@@ -111,8 +117,7 @@ class node_maker(Node):
 
         if self.finish is not True:
 
-            log = np.matrix([])
-            log3 = np.matrix([])
+            self.onKondisi('OnTrack')
 
             current___config = self.transform_to_matrix(self.pose_to_transform(msg.pose.pose))
             
@@ -169,13 +174,16 @@ class node_maker(Node):
                 ]
 
             x_err = np.array([log[2][1], log[0][2], log[1][0], log[0][3], log[1][3], log[2][3]])
-            self.get_logger().info(str(round(x_err[2], 4)) + " " + str(round(x_err[3], 4)) + " " + str(round(x_err[4], 4)) + " " + str(self.count) + " " + str(self.plan_d.__len__()))
 
-            self.twists.angular.z = self.pid_w.compute(x_err[2], self.get_parameter('limit_speed_on_w').value)
-            self.twists.linear.x  = self.pid_x.compute(x_err[3], self.get_parameter('limit_speed_on_x').value)
-            self.twists.linear.y  = self.pid_y.compute(x_err[4], self.get_parameter('limit_speed_on_y').value)
+            data_log = '{:.2f}\t{:.2f}\t{:.2f}'.format(x_err[3], x_err[4], x_err[2])
+            self.get_logger().info(data_log)
 
-            if abs(x_err[3]) < 0.2 and abs(x_err[4]) < 0.2 and abs(x_err[2]) < self.toleransi:
+            twists = Twist()
+            twists.angular.z = self.pid_w.compute(x_err[2], self.get_parameter('limit_speed_on_w').value)
+            twists.linear.x  = self.pid_x.compute(x_err[3], self.get_parameter('limit_speed_on_x').value)
+            twists.linear.y  = self.pid_y.compute(x_err[4], self.get_parameter('limit_speed_on_y').value)
+
+            if abs(x_err[3]) < 0.1 and abs(x_err[4]) < 0.1 and abs(x_err[2]) < self.toleransi:
                 if self.count < self.plan_d.__len__():
                     for i in range(int((self.plan_d.__len__() - 1) / self.step_)):
                         if self.count == (i * self.step_) + 1:
@@ -196,11 +204,13 @@ class node_maker(Node):
 
                 elif self.count == self.plan_d.__len__() and abs(x_err[3]) < self.toleransi and abs(x_err[4]) < self.toleransi and abs(x_err[2]) < self.toleransi:
                     self.finish = True
-                    self.twists.angular.z = 0.0
-                    self.twists.linear.x = 0.0
-                    self.twists.linear.y = 0.0
+                    twists = Twist()
+                    twists.angular.z = 0.0
+                    twists.linear.x = 0.0
+                    twists.linear.y = 0.0
+                    self.onKondisi('Stop')
 
-            self.twist_publisher.publish(self.twists)
+            self.twist_publisher.publish(twists)
 
     def onClick_points(self, msg: PoseStamped):
         self.finish = False
