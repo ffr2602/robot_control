@@ -28,17 +28,15 @@ class controller(Node):
         chassis_length  = 1.004
         chassis_width   = 0.484
         wheel_thickness = 0.07
-        wheel_radius    = 0.05
 
-        wheel_offset_x = (chassis_length - (0.0795 * 2))/2
-        wheel_offset_y = (chassis_width + wheel_thickness)/2
+        wheel_offset_x = (chassis_length - (0.0795 * 2)) * 0.5
+        wheel_offset_y = (chassis_width + wheel_thickness) * 0.5
 
         self.previous_time  = time.time()
 
         self.GEOMETRI_ROBOT = wheel_offset_x + wheel_offset_y
-        self.WHEEL_RADIUS   = wheel_radius
-
         self.declare_parameter('mode_orientation', value='odometry')
+        self.declare_parameter('wheel_diameter', value=10.5)
         
         self.create_subscription(Imu, '/imu', self.imu_feedback, qos_profile=qos_profile_sensor_data)
         self.create_subscription(Twist, '/omni_cont/cmd_vel_unstamped', self.apply_velocity, qos_profile=qos_profile_system_default)
@@ -50,11 +48,10 @@ class controller(Node):
         self.rotation       = Quaternion()
         self.motor_position = np.zeros(4)
 
-        self.previous_position = np.zeros(3).astype(float)
         self.position          = np.zeros(3).astype(float)
         self.can_setup         = CAN_setting()
 
-        self.robot = robot(self.GEOMETRI_ROBOT, self.WHEEL_RADIUS)
+        self.robot = robot(self.GEOMETRI_ROBOT, self.get_parameter('wheel_diameter').value * 0.5)
 
         threading.Thread(target=self.read_thread_function).start()
     
@@ -83,7 +80,7 @@ class controller(Node):
             self.get_rotation_in_rad(self.motor_position[3])]
         self.joints_publisher.publish(joint_states)
 
-    def publish_odom(self, new_position, delta_time):
+    def publish_odom(self, new_position):
 
         self.position[0] += new_position[0] * math.cos(self.position[2]) - new_position[1] * math.sin(self.position[2]) 
         self.position[1] += new_position[0] * math.sin(self.position[2]) + new_position[1] * math.cos(self.position[2])
@@ -116,21 +113,16 @@ class controller(Node):
             odom_transform.transform.rotation  = rotation
         elif self.get_parameter('mode_orientation').value == 'IMU':
             odom_transform.transform.rotation  = self.rotation
-        odometry.twist.twist.linear.x  = (self.position[0] - self.previous_position[0]) / delta_time
-        odometry.twist.twist.linear.y  = (self.position[1] - self.previous_position[1]) / delta_time
-        odometry.twist.twist.angular.z = (self.position[2] - self.previous_position[2]) / delta_time
+        odometry.twist.twist.linear.x  = new_position[0]
+        odometry.twist.twist.linear.y  = new_position[1]
+        odometry.twist.twist.angular.z = new_position[2]
         self.odom_publisher.publish(odometry)
-
-        self.previous_position = self.position
 
     def read_thread_function(self):
         while True:
-            current_time = time.time()
-            delta_time = current_time - self.previous_time
             self.can_setup.send_data_can(self.motor_vel)
-            self.publish_odom(self.robot.compute_forward_kinematic(self.can_setup.read_motor_position()), delta_time=delta_time)
+            self.publish_odom(self.robot.compute_forward_kinematic(self.can_setup.read_motor_position()))
             self.publish_wheels_state(self.can_setup.read_motor_position())
-            self.previous_time = current_time
             time.sleep(0.1)
 
 

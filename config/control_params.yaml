@@ -1,11 +1,12 @@
 omni_controller:
   ros__parameters:
     mode_orientation: odometry
+    wheel_diameter: 10.5
 
 path_tracking:
   ros__parameters:
     orientation: fixed
-    step: 500
+    step: 100
 
     pid_x-Kp: 20.0
     pid_x-Ki: 0.0
