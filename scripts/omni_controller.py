@@ -123,7 +123,7 @@ class controller(Node):
             self.can_setup.send_data_can(self.motor_vel)
             self.publish_odom(self.robot.compute_forward_kinematic(self.can_setup.read_motor_position()))
             self.publish_wheels_state(self.can_setup.read_motor_position())
-            time.sleep(0.1)
+            # time.sleep(0.1)
 
 
 def main(args=None):
