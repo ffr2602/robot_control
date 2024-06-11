@@ -19,8 +19,8 @@ path_tracking:
     pid_w-Ki: 0.0
     pid_w-Kd: 0.2
 
-    limit_speed_on_x: 1.0
-    limit_speed_on_y: 1.0
+    limit_speed_on_x: 3.0
+    limit_speed_on_y: 3.0
     limit_speed_on_w: 1.0
 
   # orientation mode:
