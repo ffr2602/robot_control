@@ -44,7 +44,7 @@ def generate_launch_description():
     )
 
     rosbridge = IncludeLaunchDescription(
-        XMLLaunchDescriptionSource([os.path.join(get_package_share_directory(package_name), 'launch', 'rosbridge_websocket_launch.xml')])
+        PythonLaunchDescriptionSource([os.path.join(get_package_share_directory(package_name), 'launch', 'rosbridge_websocket.py')])
     )
 
     return LaunchDescription([
