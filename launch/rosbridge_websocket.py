@@ -97,7 +97,7 @@ def generate_launch_description():
     return LaunchDescription([
 
         DeclareLaunchArgument('port', default_value='9090'),
-        DeclareLaunchArgument('address', default_value=IPAddr),
+        DeclareLaunchArgument('address', default_value='{:}'.format(IPAddr)),
         DeclareLaunchArgument('ssl', default_value='false'),
         DeclareLaunchArgument('certfile', default_value=''),
         DeclareLaunchArgument('keyfile', default_value=''),
