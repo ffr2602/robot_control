@@ -7,7 +7,8 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 
-IPAddr = socket.gethostbyname(socket.gethostname())
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+s.connect(("8.8.8.8", 80))
 
 
 def generate_launch_description():
@@ -97,7 +98,7 @@ def generate_launch_description():
     return LaunchDescription([
 
         DeclareLaunchArgument('port', default_value='9090'),
-        DeclareLaunchArgument('address', default_value='{:}'.format(IPAddr)),
+        DeclareLaunchArgument('address', default_value=s.getsockname()[0]),
         DeclareLaunchArgument('ssl', default_value='false'),
         DeclareLaunchArgument('certfile', default_value=''),
         DeclareLaunchArgument('keyfile', default_value=''),
