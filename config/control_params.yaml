@@ -1,7 +1,7 @@
 omni_controller:
   ros__parameters:
     mode_orientation: odometry
-    wheel_diameter: 10.5
+    wheel_diameter: 0.1016
 
 path_tracking:
   ros__parameters:

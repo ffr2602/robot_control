@@ -36,7 +36,7 @@ class controller(Node):
 
         self.GEOMETRI_ROBOT = wheel_offset_x + wheel_offset_y
         self.declare_parameter('mode_orientation', value='odometry')
-        self.declare_parameter('wheel_diameter', value=10.5)
+        self.declare_parameter('wheel_diameter', value=0.1016)
         
         self.create_subscription(Imu, '/imu', self.imu_feedback, qos_profile=qos_profile_sensor_data)
         self.create_subscription(Twist, '/omni_cont/cmd_vel_unstamped', self.apply_velocity, qos_profile=qos_profile_system_default)

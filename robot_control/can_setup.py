@@ -4,7 +4,8 @@ import math
 
 CAN_ID          = [0x401, 0x402, 0x403, 0x404]
 CAN_ID_feedback = [0x381, 0x382, 0x383, 0x384]
-RATIO           = 655350
+RATIO           = [665384, 656640, 665361, 665486]
+# RATIO           = 655350
 
 
 class CAN_setting():
@@ -42,8 +43,9 @@ class CAN_setting():
                         self.data_pre_position[i] = a + b + c + d
                         self.firt_data[i] = True
                     self.data_new_position[i] = a + b + c + d
-                    self.motor_position[i] = self.read_position(self.data_pre_position[i], self.data_new_position[i]) / RATIO * math.pi * 2
+                    self.motor_position[i] = self.read_position(self.data_pre_position[i], self.data_new_position[i]) / RATIO[i] * math.pi * 2
                     self.data_pre_position[i] = self.data_new_position[i]
+        # print(self.motor_position)
 
     def read_position(self, previous_position, new_position):
         diff = new_position - previous_position
