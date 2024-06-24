@@ -175,15 +175,15 @@ class node_maker(Node):
 
             x_err = np.array([log[2][1], log[0][2], log[1][0], log[0][3], log[1][3], log[2][3]])
 
-            data_log = '{:.2f}\t{:.2f}\t{:.2f}'.format(x_err[3], x_err[4], x_err[2])
-            self.get_logger().info(data_log)
+            # data_log = '{:.2f}\t{:.2f}\t{:.2f}'.format(x_err[3], x_err[4], x_err[2])
+            # self.get_logger().info(data_log)
 
             twists = Twist()
             twists.angular.z = self.pid_w.compute(x_err[2], self.get_parameter('limit_speed_on_w').value)
             twists.linear.x  = self.pid_x.compute(x_err[3], self.get_parameter('limit_speed_on_x').value)
             twists.linear.y  = self.pid_y.compute(x_err[4], self.get_parameter('limit_speed_on_y').value)
 
-            if abs(x_err[3]) < 0.1 and abs(x_err[4]) < 0.1 and abs(x_err[2]) < self.toleransi:
+            if abs(x_err[3]) < 0.2 and abs(x_err[4]) < 0.01 and abs(x_err[2]) < self.toleransi:
                 if self.count < self.plan_d.__len__():
                     for i in range(int((self.plan_d.__len__() - 1) / self.step_)):
                         if self.count == (i * self.step_) + 1:

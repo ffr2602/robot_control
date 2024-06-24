@@ -32,8 +32,6 @@ class controller(Node):
         wheel_offset_x = (chassis_length - (0.0795 * 2)) * 0.5
         wheel_offset_y = (chassis_width + wheel_thickness) * 0.5
 
-        self.previous_time  = time.time()
-
         self.GEOMETRI_ROBOT = wheel_offset_x + wheel_offset_y
         self.declare_parameter('mode_orientation', value='odometry')
         self.declare_parameter('wheel_diameter', value=0.1016)
@@ -110,9 +108,9 @@ class controller(Node):
         odometry.pose.pose.position.y  = self.position[1]
         odometry.pose.pose.position.z  = 0.0
         if self.get_parameter('mode_orientation').value == 'odometry':
-            odom_transform.transform.rotation  = rotation
+            odometry.pose.pose.orientation  = rotation
         elif self.get_parameter('mode_orientation').value == 'IMU':
-            odom_transform.transform.rotation  = self.rotation
+            odometry.pose.pose.orientation  = self.rotation
         odometry.twist.twist.linear.x  = new_position[0]
         odometry.twist.twist.linear.y  = new_position[1]
         odometry.twist.twist.angular.z = new_position[2]
@@ -123,8 +121,7 @@ class controller(Node):
             self.can_setup.send_data_can(self.motor_vel)
             self.publish_odom(self.robot.compute_forward_kinematic(self.can_setup.read_motor_position()))
             self.publish_wheels_state(self.can_setup.read_motor_position())
-            # time.sleep(0.1)
-
+            
 
 def main(args=None):
     rclpy.init(args=args)
