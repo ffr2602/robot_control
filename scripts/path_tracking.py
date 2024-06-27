@@ -27,6 +27,7 @@ class node_maker(Node):
 
     finish = True
     plan_n = False
+    reset_ = False
 
     def __init__(self):
         super().__init__('path_tracking')
@@ -54,6 +55,7 @@ class node_maker(Node):
         self.create_subscription(PoseStamped, '/goal_pose', self.onClick_points, qos_profile=qos_profile_system_default)
         self.create_subscription(Odometry, '/odom', self.onOdom_data, qos_profile=qos_profile_system_default)
         self.create_subscription(Path, '/plan', self.onPlan, qos_profile=qos_profile_system_default)
+        self.create_subscription(String, '/rset', self.onReset, qos_profile=qos_profile_system_default)
         self.plan__publisher = self.create_publisher(Path, '/plan', qos_profile=qos_profile_system_default)
         self.twist_publisher = self.create_publisher(Twist, '/cmd_vel', qos_profile=qos_profile_system_default)
         self.mark__publisher = self.create_publisher(Marker, '/marker', qos_profile=qos_profile_system_default)
@@ -68,10 +70,26 @@ class node_maker(Node):
         self.pid_x = PID(self.get_parameter('pid_x-Kp').value, self.get_parameter('pid_x-Ki').value, self.get_parameter('pid_x-Kd').value)
         self.pid_y = PID(self.get_parameter('pid_y-Kp').value, self.get_parameter('pid_y-Ki').value, self.get_parameter('pid_y-Kd').value)
         self.pid_w = PID(self.get_parameter('pid_w-Kp').value, self.get_parameter('pid_w-Ki').value, self.get_parameter('pid_w-Kd').value)
+    
+    def onReset(self, msg: String):
+        if msg.data == 'reset':
+            self.reset_ = True
+            self.count = 0
+            self.last_position = np.zeros(2)
+            if self.reset_ == True:
+                data_send = Path()
+                data = PoseStamped()
+                data_send.poses.append(data)
+                self.plan__publisher.publish(data_send)
+                self.reset_ = False
 
     def onPlan(self, msg: Path):
-        self.plan_d += msg.poses
-        self.finish = False
+        if self.reset_ == False:
+            self.plan_d += msg.poses
+            self.finish = False
+        else:
+            self.plan_d = msg.poses
+            self.finish = False
     
     def onKondisi(self, data_kondisi):
         data_send = String()

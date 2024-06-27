@@ -45,6 +45,13 @@ class CAN_setting():
                     self.motor_position[i] = self.read_position(self.data_pre_position[i], self.data_new_position[i]) / RATIO * math.pi * 2
                     self.data_pre_position[i] = self.data_new_position[i]
 
+    def send_velocity(self, ID_CAN, data):
+        self.bus.send(can.Message(arbitration_id=ID_CAN, data=[0x0f, 0x00, 0x03,
+                                                                      int(hex(data & 0xff), 16),
+                                                                      int(hex(data >> 8 & 0xff), 16),
+                                                                      int(hex(data >> 16 & 0xff), 16),
+                                                                      int(hex(data >> 32 & 0xff), 16), 0x00], is_extended_id=False))
+
     def read_position(self, previous_position, new_position):
         diff = new_position - previous_position
         if diff > 0:
@@ -68,3 +75,20 @@ class CAN_setting():
 
     def read_motor_position(self):
         return self.motor_position
+    
+
+def main(args=None):
+    drive_controller = CAN_setting().send_velocity(0x403, 00)
+    try:
+        drive_controller
+    except KeyboardInterrupt:
+        print('Stopped by keyboard interrupt')
+        pass
+    except BaseException:
+        print('Stopped by exception')
+        raise
+
+
+if __name__ == '__main__':
+    main()
+
