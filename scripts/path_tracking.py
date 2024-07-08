@@ -19,15 +19,12 @@ from robot_control.pid import PID
 class node_maker(Node):
 
     plan_d = [PoseStamped()]
-
-    count = 0
-
     last_position = np.zeros(2)
     toleransi = 0.01
+    count = 0
 
     finish = True
     plan_n = False
-    reset_ = False
 
     def __init__(self):
         super().__init__('path_tracking')
@@ -59,8 +56,6 @@ class node_maker(Node):
         self.plan__publisher = self.create_publisher(Path, '/plan', qos_profile=qos_profile_system_default)
         self.twist_publisher = self.create_publisher(Twist, '/cmd_vel', qos_profile=qos_profile_system_default)
         self.mark__publisher = self.create_publisher(Marker, '/marker', qos_profile=qos_profile_system_default)
-        self.odref_publisher = self.create_publisher(Odometry, '/odom_ref', qos_profile=qos_profile_system_default)
-        self.cnftn_publisher = self.create_publisher(String, '/robot_kondisi', qos_profile=qos_profile_system_default)
 
         self.marker_setting()
 
@@ -73,28 +68,23 @@ class node_maker(Node):
     
     def onReset(self, msg: String):
         if msg.data == 'reset':
-            self.reset_ = True
             self.count = 0
             self.last_position = np.zeros(2)
-            if self.reset_ == True:
-                data_send = Path()
-                data = PoseStamped()
-                data_send.poses.append(data)
-                self.plan__publisher.publish(data_send)
-                self.reset_ = False
+            self.plan_d = [PoseStamped()]
+            self.reference_config = self.transform_to_matrix(self.pose_to_transform(self.plan_d[self.count].pose))
+            line_point = Point()
+            line_point.x = 0.0
+            line_point.y = 0.0
+            self.marker.points.append(line_point)
+            self.marker.color.a = 1.0
+            self.marker.color.r = 1.0
+            self.marker.color.g = 1.0
+            self.marker.color.b = 0.0
+            self.mark__publisher.publish(self.marker)
 
     def onPlan(self, msg: Path):
-        if self.reset_ == False:
-            self.plan_d += msg.poses
-            self.finish = False
-        else:
-            self.plan_d = msg.poses
-            self.finish = False
-    
-    def onKondisi(self, data_kondisi):
-        data_send = String()
-        data_send.data = data_kondisi
-        self.cnftn_publisher.publish(data_send)
+        self.plan_d += msg.poses
+        self.finish = False
 
     def pose_to_transform(self, msg: Pose):
         transform = TransformStamped()
@@ -121,21 +111,9 @@ class node_maker(Node):
     def is_zero(self, matrix, tol):
         return np.allclose(matrix, 0, atol=tol)
 
-    def odom_ref(self, position: Pose):
-        odometry_refrence = Odometry()
-        odometry_refrence.header.stamp = self.get_clock().now().to_msg()
-        odometry_refrence.header.frame_id = "odom"
-        odometry_refrence.child_frame_id = "base_footprint"
-        odometry_refrence.pose.pose.position.x = position.position.x
-        odometry_refrence.pose.pose.position.y = position.position.y
-        odometry_refrence.pose.pose.orientation = position.orientation
-        self.odref_publisher.publish(odometry_refrence)
-
     def onOdom_data(self, msg: Odometry):
 
         if self.finish is not True:
-
-            self.onKondisi('OnTrack')
 
             current___config = self.transform_to_matrix(self.pose_to_transform(msg.pose.pose))
             
@@ -193,9 +171,6 @@ class node_maker(Node):
 
             x_err = np.array([log[2][1], log[0][2], log[1][0], log[0][3], log[1][3], log[2][3]])
 
-            # data_log = '{:.2f}\t{:.2f}\t{:.2f}'.format(x_err[3], x_err[4], x_err[2])
-            # self.get_logger().info(data_log)
-
             twists = Twist()
             twists.angular.z = self.pid_w.compute(x_err[2], self.get_parameter('limit_speed_on_w').value)
             twists.linear.x  = self.pid_x.compute(x_err[3], self.get_parameter('limit_speed_on_x').value)
@@ -213,11 +188,9 @@ class node_maker(Node):
                     if self.plan_n == True:
                         if abs(x_err[3]) < self.toleransi and abs(x_err[4]) < self.toleransi and abs(x_err[2]) < self.toleransi:
                             self.reference_config = self.transform_to_matrix(self.pose_to_transform(self.plan_d[self.count].pose))
-                            self.odom_ref(self.plan_d[self.count].pose)
                             self.count += 1
                     else:
                         self.reference_config = self.transform_to_matrix(self.pose_to_transform(self.plan_d[self.count].pose))
-                        self.odom_ref(self.plan_d[self.count].pose)
                         self.count += 1
 
                 elif self.count == self.plan_d.__len__() and abs(x_err[3]) < self.toleransi and abs(x_err[4]) < self.toleransi and abs(x_err[2]) < self.toleransi:
@@ -226,7 +199,6 @@ class node_maker(Node):
                     twists.angular.z = 0.0
                     twists.linear.x = 0.0
                     twists.linear.y = 0.0
-                    self.onKondisi('Stop')
 
             self.twist_publisher.publish(twists)
 
@@ -244,6 +216,8 @@ class node_maker(Node):
 
         data_send = Path()
         data_send.header.frame_id = 'odom'
+        data_send.poses = []
+
         for i in range(1, self.step_ + 1):
             data = PoseStamped()
             if self.get_parameter('orientation').value == 'fixed':
