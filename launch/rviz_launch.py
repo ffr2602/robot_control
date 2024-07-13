@@ -18,6 +18,13 @@ def generate_launch_description():
         arguments=['-d', rviz_bot]
     )
 
+    node_gui = Node(
+        package='robot_control',
+        executable='GUI.py',
+        name='GUI'
+    )
+
     return LaunchDescription([
-        node_rviz_bot
+        node_rviz_bot,
+        node_gui
     ])

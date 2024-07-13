@@ -20,6 +20,7 @@ install(PROGRAMS
   scripts/joy_control.py
   scripts/omni_controller.py
   scripts/path_tracking.py
+  scripts/GUI.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
