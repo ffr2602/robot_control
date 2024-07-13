@@ -50,7 +50,7 @@ def generate_launch_description():
     return LaunchDescription([
         rsp,
         controller,
-        imu_sensor,
+        # imu_sensor,
         twist_mux,
         path_tracking,
         rosbridge
