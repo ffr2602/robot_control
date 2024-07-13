@@ -176,7 +176,7 @@ class node_maker(Node):
             twists.linear.x  = self.pid_x.compute(x_err[3], self.get_parameter('limit_speed_on_x').value)
             twists.linear.y  = self.pid_y.compute(x_err[4], self.get_parameter('limit_speed_on_y').value)
 
-            if abs(x_err[3]) < 0.2 and abs(x_err[4]) < 0.01 and abs(x_err[2]) < self.toleransi:
+            if abs(x_err[3]) < 0.2 and abs(x_err[4]) < 0.2 and abs(x_err[2]) < self.toleransi:
                 if self.count < self.plan_d.__len__():
                     for i in range(int((self.plan_d.__len__() - 1) / self.step_)):
                         if self.count == (i * self.step_) + 1:
