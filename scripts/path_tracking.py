@@ -89,7 +89,7 @@ class node_maker(Node):
 
     def onKondisi(self, data):
         msg_data = String()
-        msg_data.data(data)
+        msg_data.data = data
         self.onKondisi_publisher.publish(msg_data)
 
     def pose_to_transform(self, msg: Pose):
