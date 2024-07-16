@@ -56,6 +56,7 @@ class node_maker(Node):
         self.plan__publisher = self.create_publisher(Path, '/plan', qos_profile=qos_profile_system_default)
         self.twist_publisher = self.create_publisher(Twist, '/cmd_vel', qos_profile=qos_profile_system_default)
         self.mark__publisher = self.create_publisher(Marker, '/marker', qos_profile=qos_profile_system_default)
+        self.onKondisi_publisher = self.create_publisher(String, '/robot_kondisi', qos_profile=qos_profile_system_default)
 
         self.marker_setting()
 
@@ -86,6 +87,11 @@ class node_maker(Node):
         self.plan_d += msg.poses
         self.finish = False
 
+    def onKondisi(self, data):
+        msg_data = String()
+        msg_data.data(data)
+        self.onKondisi_publisher.publish(msg_data)
+
     def pose_to_transform(self, msg: Pose):
         transform = TransformStamped()
         transform.transform.translation.x = msg.position.x
@@ -114,6 +120,8 @@ class node_maker(Node):
     def onOdom_data(self, msg: Odometry):
 
         if self.finish is not True:
+
+            self.onKondisi('onTrack')
 
             current___config = self.transform_to_matrix(self.pose_to_transform(msg.pose.pose))
             
@@ -199,6 +207,7 @@ class node_maker(Node):
                     twists.angular.z = 0.0
                     twists.linear.x = 0.0
                     twists.linear.y = 0.0
+                    self.onKondisi('Stop')
 
             self.twist_publisher.publish(twists)
 

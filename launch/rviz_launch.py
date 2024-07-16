@@ -26,5 +26,5 @@ def generate_launch_description():
 
     return LaunchDescription([
         node_rviz_bot,
-        node_gui
+        # node_gui
     ])
