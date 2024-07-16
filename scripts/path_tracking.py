@@ -20,7 +20,6 @@ class node_maker(Node):
 
     plan_d = [PoseStamped()]
     last_position = np.zeros(2)
-    toleransi = 0.01
     count = 0
 
     finish = True
@@ -63,9 +62,17 @@ class node_maker(Node):
         self.reference_config = self.transform_to_matrix(self.pose_to_transform(self.plan_d[self.count].pose))
 
         self.step_ = self.get_parameter('step').value
-        self.pid_x = PID(self.get_parameter('pid_x-Kp').value, self.get_parameter('pid_x-Ki').value, self.get_parameter('pid_x-Kd').value)
-        self.pid_y = PID(self.get_parameter('pid_y-Kp').value, self.get_parameter('pid_y-Ki').value, self.get_parameter('pid_y-Kd').value)
-        self.pid_w = PID(self.get_parameter('pid_w-Kp').value, self.get_parameter('pid_w-Ki').value, self.get_parameter('pid_w-Kd').value)
+        self.pid_x = PID(self.get_parameter('pid_x-Kp').value, 
+                         self.get_parameter('pid_x-Ki').value, 
+                         self.get_parameter('pid_x-Kd').value)
+        
+        self.pid_y = PID(self.get_parameter('pid_y-Kp').value, 
+                         self.get_parameter('pid_y-Ki').value, 
+                         self.get_parameter('pid_y-Kd').value)
+        
+        self.pid_w = PID(self.get_parameter('pid_w-Kp').value, 
+                         self.get_parameter('pid_w-Ki').value, 
+                         self.get_parameter('pid_w-Kd').value)
     
     def onReset(self, msg: String):
         if msg.data == 'reset':
@@ -184,7 +191,7 @@ class node_maker(Node):
             twists.linear.x  = self.pid_x.compute(x_err[3], self.get_parameter('limit_speed_on_x').value)
             twists.linear.y  = self.pid_y.compute(x_err[4], self.get_parameter('limit_speed_on_y').value)
 
-            if abs(x_err[3]) < 0.2 and abs(x_err[4]) < 0.2 and abs(x_err[2]) < self.toleransi:
+            if abs(x_err[3]) < 0.2 and abs(x_err[4]) < 0.2 and abs(x_err[2]) < 0.01:
                 if self.count < self.plan_d.__len__():
                     for i in range(int((self.plan_d.__len__() - 1) / self.step_)):
                         if self.count == (i * self.step_) + 1:
@@ -194,14 +201,14 @@ class node_maker(Node):
                             self.plan_n = False
 
                     if self.plan_n == True:
-                        if abs(x_err[3]) < self.toleransi and abs(x_err[4]) < self.toleransi and abs(x_err[2]) < self.toleransi:
+                        if abs(x_err[3]) < 0.01 and abs(x_err[4]) < 0.01 and abs(x_err[2]) < 0.01:
                             self.reference_config = self.transform_to_matrix(self.pose_to_transform(self.plan_d[self.count].pose))
                             self.count += 1
                     else:
                         self.reference_config = self.transform_to_matrix(self.pose_to_transform(self.plan_d[self.count].pose))
                         self.count += 1
 
-                elif self.count == self.plan_d.__len__() and abs(x_err[3]) < self.toleransi and abs(x_err[4]) < self.toleransi and abs(x_err[2]) < self.toleransi:
+                elif self.count == self.plan_d.__len__() and abs(x_err[3]) < 0.01 and abs(x_err[4]) < 0.01 and abs(x_err[2]) < 0.01:
                     self.finish = True
                     twists = Twist()
                     twists.angular.z = 0.0

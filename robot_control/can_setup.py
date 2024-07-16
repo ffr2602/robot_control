@@ -30,7 +30,8 @@ class CAN_setting():
                                                                       int(hex(data[i] & 0xff), 16),
                                                                       int(hex(data[i] >> 8 & 0xff), 16),
                                                                       int(hex(data[i] >> 16 & 0xff), 16),
-                                                                      int(hex(data[i] >> 32 & 0xff), 16), 0x00], is_extended_id=False))
+                                                                      int(hex(data[i] >> 32 & 0xff), 16), 0x00], 
+                                                                      is_extended_id=False))
             if self.can_open == True:
                 msg_recv = self.bus.recv()
                 if hex(msg_recv.arbitration_id) == hex(CAN_ID_feedback[i]):
@@ -42,7 +43,8 @@ class CAN_setting():
                         self.data_pre_position[i] = a + b + c + d
                         self.firt_data[i] = True
                     self.data_new_position[i] = a + b + c + d
-                    self.motor_position[i] = self.read_position(self.data_pre_position[i], self.data_new_position[i]) / RATIO * math.pi * 2
+                    self.motor_position[i] = self.read_position(self.data_pre_position[i], 
+                                                                self.data_new_position[i]) / RATIO * math.pi * 2
                     self.data_pre_position[i] = self.data_new_position[i]
 
     def read_position(self, previous_position, new_position):
