@@ -5,6 +5,7 @@ import math
 import numpy as np
 import rclpy.parameter
 import tf_transformations
+import time
 
 from geometry_msgs.msg import PoseStamped, Twist, TransformStamped, Pose, Quaternion, Point
 from std_msgs.msg import String
@@ -24,6 +25,7 @@ class node_maker(Node):
 
     finish = True
     plan_n = False
+    waktu_sebelumnya = 0
 
     def __init__(self):
         super().__init__('path_tracking')
@@ -129,6 +131,7 @@ class node_maker(Node):
         if self.finish is not True:
 
             self.onKondisi('onTrack')
+            self.waktu_sebelumnya = time.time()
 
             current___config = self.transform_to_matrix(self.pose_to_transform(msg.pose.pose))
             
@@ -215,6 +218,9 @@ class node_maker(Node):
                     twists.linear.x = 0.0
                     twists.linear.y = 0.0
                     self.onKondisi('Stop')
+                    end_time = time.time()
+                    waktu_estimasi = end_time - self.waktu_sebelumnya
+                    self.get_logger().info('time: ' + str(waktu_estimasi))
 
             self.twist_publisher.publish(twists)
 
